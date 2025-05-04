@@ -1,4 +1,4 @@
-# Ñybercafe monitoring system
+# Cybercafe monitoring system
 ## Overview
 A prototype simulation system for managing a cybercafe.
 ## Key Features
