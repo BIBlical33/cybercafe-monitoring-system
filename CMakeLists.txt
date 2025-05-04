@@ -1,21 +1,37 @@
-﻿# CMakeList.txt : CMake project for cybercafe-monitoring-system, include source and define
-# project specific logic here.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.20)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+project(cybercafe_monitoring_system)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if (MSVC)
+    foreach(flag_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+        string(REPLACE "/GR" "" ${flag_var} "${${flag_var}}")
+        string(REPLACE "/W3" "" ${flag_var} "${${flag_var}}")
+    endforeach()
+    add_compile_options(/GR- /W4)
+    add_compile_options(/Zi /DEBUG)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND MINGW)
+        add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
+    elseif (CMAKE_SYSTEM_NAME STREQUAL "CYGWIN")
+        add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
+    else()
+        add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
+    endif()
 endif()
 
-project ("cybercafe-monitoring-system")
 
-# Add source to this project's executable.
-add_executable (cybercafe-monitoring-system "cybercafe-monitoring-system.cpp" "cybercafe-monitoring-system.h")
+add_executable(cybercafe_monitoring_system
+    src/test.cc
+    src/cybercafe_monitoring_system.cc
+)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET cybercafe-monitoring-system PROPERTY CXX_STANDARD 20)
-endif()
+target_include_directories(cybercafe_monitoring_system PRIVATE ${CMAKE_SOURCE_DIR})
 
-# TODO: Add tests and install targets if needed.
