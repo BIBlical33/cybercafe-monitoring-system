@@ -2,10 +2,10 @@
 //
 // Copyright (c) 2025, github.com/BIBlical33
 //
-// Cybercafe monitoting system
+// Cybercafe monitoring system
 //
-// This software may not be modified, or used in any form without the explicit
-// permission of the copyright holder. For permission requests, please contact:
+// This software may not be modified without the explicit permission of the
+// copyright holder. For permission requests, please contact:
 // mag1str.kram@gmail.com
 
 #include "include/cybercafe_monitoring_system.h"
@@ -95,6 +95,7 @@ void CybercafeMonitoringSystem::ClientSatAtTableEvent::Handle(
       system.clients_at_table_[client_name_] = table_id_;
       system.tables_current_using_since_[table_id_] = time_;
     } break;
+
     case Id::k12: {
       system.clients_at_table_[client_name_] = table_id_;
       system.tables_current_using_since_[table_id_] = time_;
@@ -108,6 +109,11 @@ void CybercafeMonitoringSystem::ClientWaitingEvent::Handle(
 
   if (system.IsAvailableTableExists()) {
     ErrorEvent(GetTime(), "ICanWaitNoLonger!").Print();
+    return;
+  }
+
+  if (system.clients_at_table_.contains(client_name_)) {
+    ErrorEvent(GetTime(), "YouAlreadyAtTable!").Print();
     return;
   }
 
@@ -138,11 +144,13 @@ void CybercafeMonitoringSystem::ClientLeftEvent::Handle(
 
       if (not system.clients_at_table_.contains(client_name_)) {
         system.clients_.erase(client_name_);
+        auto [erase_begin_it, erase_end_it] =
+            std::ranges::remove(system.waiting_clients_, client_name_);
+        system.waiting_clients_.erase(erase_begin_it, erase_end_it);
         return;
       }
 
       int table_id = system.clients_at_table_[client_name_];
-
       system.ProcessClientDeparture(client_name_, GetTime());
 
       if (not system.waiting_clients_.empty()) {
@@ -156,6 +164,9 @@ void CybercafeMonitoringSystem::ClientLeftEvent::Handle(
     case Id::k11: {
       if (not system.clients_at_table_.contains(client_name_)) {
         system.clients_.erase(client_name_);
+        auto [erase_begin_it, erase_end_it] =
+            std::ranges::remove(system.waiting_clients_, client_name_);
+        system.waiting_clients_.erase(erase_begin_it, erase_end_it);
         return;
       }
 
@@ -174,11 +185,6 @@ CybercafeMonitoringSystem::CybercafeMonitoringSystem(
   if (tables_count < 1)
     throw std::invalid_argument(
         std::format("Invalid tables count: {}", tables_count));
-
-  for (int i = 1; i <= tables_count; ++i) {
-    tables_daily_revenue_[i] = 0;
-    tables_daily_using_[i] = std::chrono::minutes{0};
-  }
 }
 
 bool CybercafeMonitoringSystem::IsTableFree(int table_id) const {
@@ -208,7 +214,12 @@ void CybercafeMonitoringSystem::ProcessClientDeparture(
   tables_current_using_since_.erase(table_id);
 }
 
-void CybercafeMonitoringSystem::CybercafeOpen() const {
+void CybercafeMonitoringSystem::CybercafeOpen() {
+  for (int i = 1; i <= tables_count_; ++i) {
+    tables_daily_revenue_[i] = 0;
+    tables_daily_using_[i] = std::chrono::minutes{0ll};
+  }
+
   PrintTimePoint(opening_time_);
   std::cout << std::endl;
 }
@@ -240,6 +251,10 @@ void CybercafeMonitoringSystem::CybercafeClose() {
   }
 
   PrintClosingStats();
+
+  tables_daily_using_.clear();
+  tables_current_using_since_.clear();
+  tables_daily_revenue_.clear();
 }
 
 }  // namespace cybercafe_monitoring_system

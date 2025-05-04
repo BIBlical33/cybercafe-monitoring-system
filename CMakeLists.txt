@@ -27,11 +27,37 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
+include(FetchContent)
 
-add_executable(cybercafe_monitoring_system
-    src/test.cc
-    src/cybercafe_monitoring_system.cc
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
 )
 
-target_include_directories(cybercafe_monitoring_system PRIVATE ${CMAKE_SOURCE_DIR})
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googletest)
+
+add_executable(
+    cybercafe_monitoring_system_app
+    src/cybercafe_monitoring_system.cc
+    src/read_input_data.cc
+)
+
+enable_testing()
+
+add_executable(
+  cybercafe_monitoring_system_test
+  tests/test.cc
+)
+target_link_libraries(
+  cybercafe_monitoring_system_test
+  GTest::gtest_main
+)
+
+target_include_directories(cybercafe_monitoring_system_app PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(cybercafe_monitoring_system_test PRIVATE ${CMAKE_SOURCE_DIR})
+
+include(GoogleTest)
+gtest_discover_tests(cybercafe_monitoring_system_test)
 

@@ -12,9 +12,11 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "include/cybercafe_monitoring_system.h"
 
@@ -114,6 +116,18 @@ CybercafeMonitoringSystem CreateTestObject(std::ifstream& file) {
       cybercafe_pc_hourly_rate);
 }
 
+void ValidateEventsOrder(
+    std::span<std::unique_ptr<CybercafeMonitoringSystem::Event>> events) {
+  if (events.size() > 1) {
+    auto previous_event_time = events[0]->GetTime();
+    for (size_t i = 1, iend = events.size(); i != iend; ++i)
+      if (events[i]->GetTime() < previous_event_time) {
+        events[i]->Print();
+        std::exit(1);
+      }
+  }
+}
+
 void ProcessingInputData(std::ifstream& file) {
   std::string file_line;
 
@@ -132,6 +146,8 @@ void ProcessingInputData(std::ifstream& file) {
 
       test_events.push_back(ParseEventBody(iss, event_time, event_id));
     }
+
+    ValidateEventsOrder(test_events);
 
     test_object.StartWorkDayTrigger();
 
@@ -154,7 +170,23 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  std::ifstream file(argv[1]);
+  std::filesystem::path current_path = std::filesystem::current_path();
+
+  while (current_path.has_parent_path()) {
+    if (current_path.filename() == "cybercafe-monitoring-system") {
+      break;
+    }
+    current_path = current_path.parent_path();
+  }
+
+  std::filesystem::path file_path = current_path / "tests" / "test_input.txt";
+
+  if (!std::filesystem::exists(file_path)) {
+    std::cerr << "File not found: " << file_path << std::endl;
+    return 1;
+  }
+
+  std::ifstream file(file_path);
   if (!file.is_open()) {
     std::cerr << "Cannot open file: " << argv[1];
     return 1;
