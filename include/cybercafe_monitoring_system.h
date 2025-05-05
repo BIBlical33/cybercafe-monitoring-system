@@ -293,19 +293,19 @@ class CybercafeMonitoringSystem final {
 
   std::deque<std::string> waiting_clients_{};
 
-  // You can ñhange it into a database
+  // You can change it into a database
   std::unordered_set<std::string> clients_{};
 
-  // You can ñhange it into a database
+  // You can change it into a database
   std::unordered_map<std::string, int> clients_at_table_{};
 
-  // You can ñhange it into a database
+  // You can change it into a database
   std::unordered_map<int, TimePoint> tables_current_using_since_;
 
-  // You can ñhange it into a database
+  // You can change it into a database
   std::unordered_map<int, std::chrono::minutes> tables_daily_using_;
 
-  // You can ñhange it into a database
+  // You can change it into a database
   std::unordered_map<int, int64_t> tables_daily_revenue_;
 };
 
