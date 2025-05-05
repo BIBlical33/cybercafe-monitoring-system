@@ -20,44 +20,60 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND MINGW)
         add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
-    elseif (CMAKE_SYSTEM_NAME STREQUAL "CYGWIN")
+    elseif ()
         add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
     else()
         add_compile_options(-fno-rtti -Wall -Wextra -Wpedantic)
     endif()
 endif()
 
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
-)
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(googletest)
-
-add_executable(
-    cybercafe_monitoring_system_app
+# Main library
+add_library(
+    cybercafe_monitoring_system_lib
     src/cybercafe_monitoring_system.cc
     src/read_input_data.cc
 )
+target_include_directories(cybercafe_monitoring_system_lib PRIVATE ${CMAKE_SOURCE_DIR})
 
-enable_testing()
-
+# Main application
 add_executable(
-  cybercafe_monitoring_system_test
-  tests/test.cc
+  cybercafe_monitoring_system_run
+  src/main.cc
 )
 target_link_libraries(
-  cybercafe_monitoring_system_test
-  GTest::gtest_main
+  cybercafe_monitoring_system_run
+  cybercafe_monitoring_system_lib
 )
+target_include_directories(cybercafe_monitoring_system_run PRIVATE ${CMAKE_SOURCE_DIR})
 
-target_include_directories(cybercafe_monitoring_system_app PRIVATE ${CMAKE_SOURCE_DIR})
-target_include_directories(cybercafe_monitoring_system_test PRIVATE ${CMAKE_SOURCE_DIR})
 
-include(GoogleTest)
-gtest_discover_tests(cybercafe_monitoring_system_test)
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "CYGWIN")
+    include(FetchContent)
 
+    FetchContent_Declare(
+      googletest
+      URL https://github.com/google/googletest/archive/52eb8108c5bdec04579160ae17225d66034bd723.zip
+    )
+
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+    FetchContent_MakeAvailable(googletest)
+
+    # Testing application
+    enable_testing()
+    add_executable(
+      cybercafe_monitoring_system_test
+      tests/revenue_calculating_test.cc
+      tests/event_handlers_test.cc
+      tests/input_data_test.cc
+    )
+    target_link_libraries(
+      cybercafe_monitoring_system_test
+      GTest::gtest_main
+      cybercafe_monitoring_system_lib
+    )
+    target_include_directories(cybercafe_monitoring_system_test PRIVATE ${CMAKE_SOURCE_DIR})
+
+    include(GoogleTest)
+    gtest_discover_tests(cybercafe_monitoring_system_test)
+endif()

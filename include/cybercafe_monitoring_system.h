@@ -50,6 +50,7 @@ class CybercafeMonitoringSystem final {
 
     virtual void Handle(CybercafeMonitoringSystem& system) = 0;
 
+    // Prints event header
     void Print() const;
 
     inline TimePoint GetTime() const { return time_; }
@@ -70,6 +71,7 @@ class CybercafeMonitoringSystem final {
       return !client_name.empty();
     }
 
+    // Prints event body
     virtual void PrintEventBody() const = 0;
 
     TimePoint time_;
@@ -207,6 +209,8 @@ class CybercafeMonitoringSystem final {
   // Remove this if you plan to modify the prototype for real-time use
   inline void EndWorkDayTrigger() { CybercafeClose(); };
 
+  // Prints the desk number, its revenue for the day and the time it was
+  // occupied during the working day
   void PrintClosingStats() const;
 
   inline bool IsWorking(const TimePoint& time) const {
@@ -234,6 +238,7 @@ class CybercafeMonitoringSystem final {
   int hourly_rate_;
 
  private:
+  // For sorting clients names
   class ClientsNameCompare final {
    public:
     bool operator()(std::string_view first, std::string_view second) const {
@@ -270,10 +275,13 @@ class CybercafeMonitoringSystem final {
   friend ClientSatAtTableEvent;
   friend ClientWaitingEvent;
 
+  // Calls when cybercafe opening
   void CybercafeOpen();
 
+  // Calls when cybercafe opening
   void CybercafeClose();
 
+  // Deletes client from database
   void ProcessClientDeparture(const std::string& client_name,
                               const TimePoint& time);
 
@@ -283,17 +291,22 @@ class CybercafeMonitoringSystem final {
 
   int64_t total_revenue_ = 0;
 
-  std::unordered_map<std::string, int> clients_at_table_{};
-
-  std::unordered_map<int, TimePoint> tables_current_using_since_;
-
-  std::unordered_map<int, std::chrono::minutes> tables_daily_using_;
-
-  std::unordered_map<int, int64_t> tables_daily_revenue_;
-
   std::deque<std::string> waiting_clients_{};
 
+  // You can ñhange it into a database
   std::unordered_set<std::string> clients_{};
+
+  // You can ñhange it into a database
+  std::unordered_map<std::string, int> clients_at_table_{};
+
+  // You can ñhange it into a database
+  std::unordered_map<int, TimePoint> tables_current_using_since_;
+
+  // You can ñhange it into a database
+  std::unordered_map<int, std::chrono::minutes> tables_daily_using_;
+
+  // You can ñhange it into a database
+  std::unordered_map<int, int64_t> tables_daily_revenue_;
 };
 
 }  // namespace cybercafe_monitoring_system

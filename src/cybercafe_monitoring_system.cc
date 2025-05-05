@@ -27,12 +27,14 @@ namespace {
 
 using cybercafe_monitoring_system::TimePoint;
 
-void PrintTimePoint(const auto& tp) {
-  auto dp = std::chrono::floor<std::chrono::days>(tp);
-  auto time = std::chrono::hh_mm_ss(tp - dp);
+// Prints time in HH:MM format
+void PrintTimePoint(const auto& time_point) {
+  auto dp = std::chrono::floor<std::chrono::days>(time_point);
+  auto time = std::chrono::hh_mm_ss(time_point - dp);
   std::cout << std::format("{:%H:%M}", time);
 }
 
+// Prints minutes in HH:MM format
 void PrintDurationAsHHMM(const std::chrono::minutes& duration) {
   auto total_hours = duration.count() / 60;
   auto total_mins = duration.count() % 60;
@@ -45,6 +47,7 @@ void PrintDurationAsHHMM(const std::chrono::minutes& duration) {
 
 namespace cybercafe_monitoring_system {
 
+// Prints event header
 void CybercafeMonitoringSystem::Event::Print() const {
   auto since_epoch = GetTime().time_since_epoch();
 
@@ -92,6 +95,11 @@ void CybercafeMonitoringSystem::ClientSatAtTableEvent::Handle(
         return;
       }
 
+      if (system.clients_at_table_.contains(client_name_)) {
+        system.ProcessClientDeparture(client_name_, time_);
+        system.clients_.insert(client_name_);
+      }
+
       system.clients_at_table_[client_name_] = table_id_;
       system.tables_current_using_since_[table_id_] = time_;
     } break;
@@ -100,6 +108,9 @@ void CybercafeMonitoringSystem::ClientSatAtTableEvent::Handle(
       system.clients_at_table_[client_name_] = table_id_;
       system.tables_current_using_since_[table_id_] = time_;
     } break;
+    default:
+      throw std::invalid_argument(
+          std::format("Invalid event id {}", static_cast<int>(id_)));
   }
 }
 
@@ -117,7 +128,8 @@ void CybercafeMonitoringSystem::ClientWaitingEvent::Handle(
     return;
   }
 
-  if (system.waiting_clients_.size() >= system.tables_count_) {
+  if (static_cast<int>(system.waiting_clients_.size()) >=
+      system.tables_count_) {
     ClientLeftEvent(GetTime(), client_name_, Event::Type::kOutgoing)
         .Handle(system);
     return;
@@ -160,7 +172,6 @@ void CybercafeMonitoringSystem::ClientLeftEvent::Handle(
         system.waiting_clients_.pop_front();
       }
     } break;
-
     case Id::k11: {
       if (not system.clients_at_table_.contains(client_name_)) {
         system.clients_.erase(client_name_);
@@ -172,58 +183,26 @@ void CybercafeMonitoringSystem::ClientLeftEvent::Handle(
 
       system.ProcessClientDeparture(client_name_, GetTime());
     } break;
+    default:
+      throw std::invalid_argument(
+          std::format("Invalid event id {}", static_cast<int>(id_)));
   }
 }
 
 CybercafeMonitoringSystem::CybercafeMonitoringSystem(
     const TimePoint& opening_time, const TimePoint& closing_time,
     int tables_count, int hourly_rate)
-    : opening_time_(opening_time),
+    : hourly_rate_(hourly_rate),
+      opening_time_(opening_time),
       closing_time_(closing_time),
-      tables_count_(tables_count),
-      hourly_rate_(hourly_rate) {
+      tables_count_(tables_count) {
   if (tables_count < 1)
     throw std::invalid_argument(
         std::format("Invalid tables count: {}", tables_count));
 }
 
-bool CybercafeMonitoringSystem::IsTableFree(int table_id) const {
-  if (table_id < 1 or table_id > tables_count_)
-    throw std::invalid_argument(
-        std::format("Incorrect table id: {}", table_id));
-
-  for (const auto& [client, table] : clients_at_table_)
-    if (table == table_id) return false;
-
-  return true;
-}
-
-void CybercafeMonitoringSystem::ProcessClientDeparture(
-    const std::string& client_name, const TimePoint& time) {
-  int table_id = clients_at_table_.at(client_name);
-
-  auto usage_duration = time - tables_current_using_since_.at(table_id);
-  tables_daily_using_[table_id] += usage_duration;
-
-  int64_t hours = (static_cast<int64_t>(usage_duration.count()) + 59) / 60;
-  tables_daily_revenue_[table_id] += hours * hourly_rate_;
-  total_revenue_ += hours * hourly_rate_;
-
-  clients_at_table_.erase(client_name);
-  clients_.erase(client_name);
-  tables_current_using_since_.erase(table_id);
-}
-
-void CybercafeMonitoringSystem::CybercafeOpen() {
-  for (int i = 1; i <= tables_count_; ++i) {
-    tables_daily_revenue_[i] = 0;
-    tables_daily_using_[i] = std::chrono::minutes{0ll};
-  }
-
-  PrintTimePoint(opening_time_);
-  std::cout << std::endl;
-}
-
+// Prints the desk number, its revenue for the day and the time it was
+// occupied during the working day
 void CybercafeMonitoringSystem::PrintClosingStats() const {
   PrintTimePoint(closing_time_);
   std::cout << std::endl;
@@ -239,6 +218,29 @@ void CybercafeMonitoringSystem::PrintClosingStats() const {
   PrintDurationAsHHMM(tables_daily_using_.at(tables_count_));
 }
 
+bool CybercafeMonitoringSystem::IsTableFree(int table_id) const {
+  if (table_id < 1 or table_id > tables_count_)
+    throw std::invalid_argument(
+        std::format("Incorrect table id: {}", table_id));
+
+  for (const auto& [client, table] : clients_at_table_)
+    if (table == table_id) return false;
+
+  return true;
+}
+
+// Calls when cybercafe opening
+void CybercafeMonitoringSystem::CybercafeOpen() {
+  for (int i = 1; i <= tables_count_; ++i) {
+    tables_daily_revenue_[i] = 0;
+    tables_daily_using_[i] = std::chrono::minutes{0ll};
+  }
+
+  PrintTimePoint(opening_time_);
+  std::cout << std::endl;
+}
+
+// Calls when cybercafe opening
 void CybercafeMonitoringSystem::CybercafeClose() {
   std::vector<std::string> remaining_clients;
   for (const auto& client : clients_) remaining_clients.push_back(client);
@@ -255,6 +257,23 @@ void CybercafeMonitoringSystem::CybercafeClose() {
   tables_daily_using_.clear();
   tables_current_using_since_.clear();
   tables_daily_revenue_.clear();
+}
+
+// Deletes client from database
+void CybercafeMonitoringSystem::ProcessClientDeparture(
+    const std::string& client_name, const TimePoint& time) {
+  int table_id = clients_at_table_.at(client_name);
+
+  auto usage_duration = time - tables_current_using_since_.at(table_id);
+  tables_daily_using_[table_id] += usage_duration;
+
+  int64_t hours = (static_cast<int64_t>(usage_duration.count()) + 59) / 60;
+  tables_daily_revenue_[table_id] += hours * hourly_rate_;
+  total_revenue_ += hours * hourly_rate_;
+
+  clients_at_table_.erase(client_name);
+  clients_.erase(client_name);
+  tables_current_using_since_.erase(table_id);
 }
 
 }  // namespace cybercafe_monitoring_system

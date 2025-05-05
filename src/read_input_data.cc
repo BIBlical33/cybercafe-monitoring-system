@@ -8,7 +8,10 @@
 // permission of the copyright holder. For permission requests, please contact:
 // mag1str.kram@gmail.com
 
+#include "include/read_input_data.h"
+
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -16,7 +19,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 #include "include/cybercafe_monitoring_system.h"
 
@@ -29,6 +31,7 @@ using CybercafeMonitoringSystem =
     cybercafe_monitoring_system::CybercafeMonitoringSystem;
 using Id = CybercafeMonitoringSystem::Event::Id;
 
+// Reads event body
 std::unique_ptr<CybercafeMonitoringSystem::Event> ParseEventBody(
     std::istringstream& iss, TimePoint event_time, int event_id) {
   switch (static_cast<Id>(event_id)) {
@@ -72,6 +75,7 @@ std::unique_ptr<CybercafeMonitoringSystem::Event> ParseEventBody(
   }
 }
 
+// Reads time in HH:MM format
 TimePoint ParseTime(std::istringstream& iss) {
   std::string time_token;
   if (!(iss >> time_token))
@@ -95,6 +99,7 @@ TimePoint ParseTime(std::istringstream& iss) {
   return TimePoint(std::chrono::minutes{hours * 60 + minutes});
 }
 
+// Reads and validates CybercafeMonitoringSystem constructor arguments
 CybercafeMonitoringSystem CreateTestObject(std::ifstream& file) {
   std::string file_line;
   std::getline(file, file_line);
@@ -116,6 +121,7 @@ CybercafeMonitoringSystem CreateTestObject(std::ifstream& file) {
       cybercafe_pc_hourly_rate);
 }
 
+// Checks that the events are in the correct chronological order
 void ValidateEventsOrder(
     std::span<std::unique_ptr<CybercafeMonitoringSystem::Event>> events) {
   if (events.size() > 1) {
@@ -128,6 +134,13 @@ void ValidateEventsOrder(
   }
 }
 
+}  // namespace
+
+namespace cybercafe_monitoring_system_test {
+
+// Reading CybercafeMonitoringSystem constructor arguments and events arguments
+// from file. If some data is incorrect, returns first incorrect data line. To
+// understand the order of arguments in file, see README.md
 void ProcessingInputData(std::ifstream& file) {
   std::string file_line;
 
@@ -161,41 +174,4 @@ void ProcessingInputData(std::ifstream& file) {
   }
 }
 
-}  // namespace
-
-int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    std::cerr << "Usage: <target filename> <filename of file for reading the "
-                 "input data>\n";
-    return 1;
-  }
-
-  std::filesystem::path current_path = std::filesystem::current_path();
-
-  while (current_path.has_parent_path()) {
-    if (current_path.filename() == "cybercafe-monitoring-system") {
-      break;
-    }
-    current_path = current_path.parent_path();
-  }
-
-  std::filesystem::path file_path = current_path / "tests" / "test_input.txt";
-
-  if (!std::filesystem::exists(file_path)) {
-    std::cerr << "File not found: " << file_path << std::endl;
-    return 1;
-  }
-
-  std::ifstream file(file_path);
-  if (!file.is_open()) {
-    std::cerr << "Cannot open file: " << argv[1];
-    return 1;
-  }
-
-  try {
-    ProcessingInputData(file);
-  } catch (const std::runtime_error& e) {
-    std::cerr << e.what();
-    return 1;
-  }
-}
+}  // namespace cybercafe_monitoring_system_test
