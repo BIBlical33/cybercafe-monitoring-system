@@ -12,8 +12,8 @@ A prototype simulation system for managing a cybercafe.
 
 ## Prerequisites
 - C++20 compatible compiler;
-- CMake 3.20.
-- make
+- CMake 3.20;
+- make.
 
 ## Building the Project
 ### 1. Clone the repository
