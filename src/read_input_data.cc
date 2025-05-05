@@ -115,6 +115,7 @@ CybercafeMonitoringSystem CreateTestObject(std::ifstream& file) {
 
   std::getline(file, file_line);
   int cybercafe_pc_hourly_rate = std::stoi(file_line);
+  if (cybercafe_pc_hourly_rate <= 0) throw std::runtime_error(file_line);
 
   return CybercafeMonitoringSystem(
       cybercafe_opening_time, cybercafe_closing_time, cybercafe_tables_count,
