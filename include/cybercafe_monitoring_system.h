@@ -255,7 +255,7 @@ class CybercafeMonitoringSystem final {
     }
 
    private:
-    static int CharacterRank(char c) {
+    inline static int CharacterRank(char c) {
       if (c >= 'a' and c <= 'z')
         return c - 'a';
       else if (c >= '0' and c <= '9')
