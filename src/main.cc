@@ -4,8 +4,8 @@
 //
 // Launching a console application
 //
-// This software may not be modified, or used in any form without the explicit
-// permission of the copyright holder. For permission requests, please contact:
+// This software may not be modified without the explicit permission of the
+// copyright holder. For permission requests, please contact:
 // mag1str.kram@gmail.com
 
 #include <filesystem>

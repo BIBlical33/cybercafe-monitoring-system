@@ -38,7 +38,7 @@ cmake --build . --config Release --parallel 4
 ```
 
 ## Running the Application
-Create test txt file in `test/` path and use
+Create test txt file in `tests/` path and use
 ```
 ./cybercafe_monitoring_system_run <your test txt file>
 ```

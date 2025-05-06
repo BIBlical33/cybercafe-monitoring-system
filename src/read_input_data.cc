@@ -4,8 +4,8 @@
 //
 // Getting and processing input data
 //
-// This software may not be modified, or used in any form without the explicit
-// permission of the copyright holder. For permission requests, please contact:
+// This software may not be modified without the explicit permission of the
+// copyright holder. For permission requests, please contact:
 // mag1str.kram@gmail.com
 
 #include "include/read_input_data.h"
