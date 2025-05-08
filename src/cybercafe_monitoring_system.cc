@@ -229,7 +229,7 @@ bool CybercafeMonitoringSystem::IsTableFree(int table_id) const {
   return true;
 }
 
-// Calls when cybercafe opening
+// Calls when the cybercafe opens
 void CybercafeMonitoringSystem::CybercafeOpen() {
   for (int i = 1; i <= tables_count_; ++i) {
     tables_daily_revenue_[i] = 0;
@@ -240,7 +240,7 @@ void CybercafeMonitoringSystem::CybercafeOpen() {
   std::cout << std::endl;
 }
 
-// Calls when cybercafe opening
+// Calls when the cybercafe closes
 void CybercafeMonitoringSystem::CybercafeClose() {
   std::vector<std::string> remaining_clients;
   for (const auto& client : clients_) remaining_clients.push_back(client);

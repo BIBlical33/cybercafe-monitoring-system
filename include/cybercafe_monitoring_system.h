@@ -275,10 +275,10 @@ class CybercafeMonitoringSystem final {
   friend ClientSatAtTableEvent;
   friend ClientWaitingEvent;
 
-  // Calls when cybercafe opening
+  // Calls when the cybercafe opens
   void CybercafeOpen();
 
-  // Calls when cybercafe opening
+  // Calls when the cybercafe closes
   void CybercafeClose();
 
   // Deletes client from database
