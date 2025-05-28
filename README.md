@@ -5,7 +5,7 @@ A prototype simulation system for managing a cybercafe.
 
 ## Key Features
 - Time management;
-- Clien handling;
+- Client handling;
 - Table management;
 - Event system;
 - Financial tracking.
