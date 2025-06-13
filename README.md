@@ -4,7 +4,7 @@
 [![C++20](https://img.shields.io/badge/C++-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 
 ## Overview
-A prototype simulation system library for managing a cybercafe.
+A prototype simulation system for managing a cybercafe.
 
 ## Key Features
 - Time management;
